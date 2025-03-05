@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-info
+spec:
+  replicas: {{ .Values.movieInfo.replicaCount }}
+  selector:
+    matchLabels:
+      app: movie-info
+  template:
+    metadata:
+      labels:
+        app: movie-info
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command: [ 'sh', '-c', 'until nc -z movie-info-mysql 3306; do echo waiting for MySQL; sleep 2; done;' ]
+        - name: wait-for-redis
+          image: busybox
+          command: [ 'sh', '-c', 'until nc -z movie-info-redis-master 6379; do echo waiting for Redis; sleep 2; done;' ]
+      containers:
+        - name: movie-info
+          image: "{{ .Values.movieInfo.image.repository }}:{{ .Values.movieInfo.image.tag }}"
+          imagePullPolicy: {{ .Values.movieInfo.image.pullPolicy }}
+          env:
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-info-config
+                  key: MYSQL_HOST
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-info-config
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-info-secrets
+                  key: mysql-password
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-info-config
+                  key: REDIS_HOST
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-info-secrets
+                  key: redis-password
+            - name: OMDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: movie-info-secrets
+                  key: omdb-api-key
+            - name: TMDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: movie-info-secrets
+                  key: tmdb-api-key

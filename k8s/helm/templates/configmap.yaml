@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: movie-info-config
+data:
+  MYSQL_HOST: "{{ .Values.movieInfo.env.mysqlHost }}"
+  MYSQL_USER: "{{ .Values.movieInfo.env.mysqlUser }}"
+  REDIS_HOST: "{{ .Values.movieInfo.env.redisHost }}"

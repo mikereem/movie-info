@@ -1,0 +1,46 @@
+movieInfo:
+  replicaCount: 1
+
+  image:
+    repository: mikereem/movie-info
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  env:
+    mysqlHost: movie-info-mysql
+    mysqlUser: movieuser
+    mysqlPassword: "securepassword"
+    mysqlRootPassword: "rootpassword"
+    redisHost: movie-info-redis-master
+    redisPassword: "redispassword"
+
+  apiKeys:
+    omdb: ""  # Required during installation
+    tmdb: ""  # Required during installation
+
+mysql:
+  auth:
+    username: "movieuser"
+    database: "movieinfo"
+    existingSecret: movie-info-secrets
+
+redis:
+  auth:
+    enabled: true
+    existingSecret: movie-info-secrets
+    existingSecretPasswordKey: redis-password
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: localhost
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: movie-info-service
+              port:
+                number: 80
